@@ -17,17 +17,27 @@ const portNumber = ":8080"
 func main() {
 	var app config.AppConfig
 
+	// initializing Template cache
 	tc, err := render.CreateTemplateCache()
 
 	if err != nil {
 		log.Fatal("cannot create template cache")
 	}
 
+	// store template cache to app config
 	app.TemplateCache = tc
 
-	http.HandleFunc("/home", handlers.Home)
+	app.UseCache = false
 
-	http.HandleFunc("/about", handlers.About)
+	repo := handlers.NewRepo(&app)
+
+	handlers.NewHandler(repo)
+
+	render.NewTemplate(&app)
+
+	http.HandleFunc("/home", handlers.Repo.Home)
+
+	http.HandleFunc("/about", handlers.Repo.About)
 
 	fmt.Println(fmt.Sprintf("Starting application on port %s", portNumber))
 

@@ -6,34 +6,41 @@ import (
 	"log"
 	"net/http"
 	"path/filepath"
+
+	"github.com/salimmia/go-course/pkg/config"
 )
 
-// RenderTemplate renders a template
+var app *config.AppConfig
+
+// NewTemplate sets the config for the template package
+func NewTemplate(a *config.AppConfig) {
+	app = a
+}
+
+// RenderTemplate renders a template using html/template
 func RenderTemplate(w http.ResponseWriter, tmpl string) {
-	// create a render template cache
-	tc, err := CreateTemplateCache()
-	if err != nil {
-		log.Fatal(err)
+	// get the template cache from the app config
+	var tc map[string]*template.Template
+
+	if app.UseCache {
+		tc = app.TemplateCache
+	} else {
+		tc, _ = CreateTemplateCache()
 	}
 
-	// get requested template from cache
 	t, ok := tc[tmpl]
 
 	if !ok {
-		log.Fatal(err)
+		log.Fatal("Could not get tamplate from template cache")
 	}
 
 	buf := new(bytes.Buffer)
 
 	_ = t.Execute(buf, nil)
 
-	if err != nil {
-		log.Println(err)
-	}
-
 	// render the template
 
-	_, err = buf.WriteTo(w)
+	_, err := buf.WriteTo(w)
 
 	if err != nil {
 		log.Println(err)
